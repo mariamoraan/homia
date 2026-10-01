@@ -60,11 +60,8 @@ export function OnboardingFlow({ pendingJoinCode }: { pendingJoinCode: string | 
     if (!auth.available || !syncStatus.available) return
     setBusy(true)
     try {
+      // ApplyAuthUser completes onboarding when the account already has houses.
       await useCases.mutations.signInWithGoogle.execute()
-      const next = useAppStore.getState().session
-      if (next.auth && (next.room || next.memberships.length > 0)) {
-        finish()
-      }
     } finally {
       setBusy(false)
     }

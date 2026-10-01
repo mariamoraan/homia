@@ -32,6 +32,23 @@ function syncErrorMessage(error: unknown): string {
   return 'No se pudo conectar con Firebase'
 }
 
+function isFirebasePermissionError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const code = 'code' in error ? String(error.code) : ''
+  const message = error instanceof Error ? error.message : String(error)
+  return (
+    code.includes('PERMISSION_DENIED') ||
+    message.toLowerCase().includes('permission_denied')
+  )
+}
+
+function membershipAccountErrorToast(error: unknown): string {
+  if (isFirebasePermissionError(error)) {
+    return 'Sin permiso en users/{uid}: publica las reglas del README en RTDB'
+  }
+  return 'No se pudieron sincronizar tus casas en la cuenta'
+}
+
 async function persistMemberships(
   uow: SessionUnitOfWork,
   uid: string,
@@ -42,8 +59,8 @@ async function persistMemberships(
   if (uow.services.accounts.available) {
     try {
       await uow.services.accounts.saveMemberships(uid, memberships)
-    } catch {
-      uow.toast('No se pudieron guardar tus casas en la cuenta')
+    } catch (error) {
+      uow.toast(membershipAccountErrorToast(error))
     }
   }
 }
@@ -432,8 +449,8 @@ export class LeaveSharedRoomMutation {
           session.auth.uid,
           memberships,
         )
-      } catch {
-        // Local state already updated.
+      } catch (error) {
+        this.uow.toast(membershipAccountErrorToast(error))
       }
     }
 
@@ -577,12 +594,15 @@ export class ApplyAuthUserMutation {
     }
 
     let remote: GroupMembership[] = []
+    let accountSyncFailed = false
     if (this.uow.services.accounts.available) {
       try {
         remote = await this.uow.services.accounts.loadMemberships(user.uid)
-      } catch {
-        // Keep local memberships if remote load fails (offline).
+      } catch (error) {
+        // Keep local memberships if remote load fails (offline / rules).
         remote = this.uow.session.memberships
+        accountSyncFailed = true
+        this.uow.toast(membershipAccountErrorToast(error))
       }
     }
 
@@ -596,16 +616,29 @@ export class ApplyAuthUserMutation {
       { push: false },
     )
 
-    if (this.uow.services.accounts.available) {
+    if (this.uow.services.accounts.available && !accountSyncFailed) {
       try {
         await this.uow.services.accounts.saveMemberships(user.uid, memberships)
-      } catch {
-        // Offline: local cache still has the merge.
+      } catch (error) {
+        this.uow.toast(membershipAccountErrorToast(error))
       }
     }
 
     if (!this.uow.session.room && memberships[0] && this.switchGroup) {
       await this.switchGroup.execute(memberships[0].room, { silent: true })
+    }
+
+    // Returning users with houses skip create/join onboarding.
+    const after = this.uow.session
+    if (
+      after.auth &&
+      !after.onboardingDone &&
+      (after.room || after.memberships.length > 0)
+    ) {
+      this.uow.commit(
+        { ...after, onboardingDone: true },
+        { push: false, stickScroll: false },
+      )
     }
 
     if (options.toast) {

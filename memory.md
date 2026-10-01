@@ -77,8 +77,9 @@ npm run lint
 ## Pendiente / notas abiertas
 
 - Google login opcional (Firebase Auth). Al iniciar sesión se hace unión de casas: la local + las de `users/{uid}/memberships`.
-- UI de login: Ajustes + onboarding (welcome/choice). Si al entrar ya hay casas en la cuenta, se completa el onboarding.
+- UI de login: Ajustes + onboarding (welcome/choice). `ApplyAuthUser` completa el onboarding y abre la casa si la cuenta ya tiene memberships (popup, redirect o cold start).
 - Un usuario puede tener varias casas; UI de cambio en header/ajustes si `memberships.length > 1`.
 - Rooms RTDB siguen abiertos por código; solo la ruta `users/{uid}` exige auth.
+- **Config crítica:** en RTDB hay que publicar reglas con nodo `users/$uid` (auth.uid == $uid). Auth puede funcionar y las memberships fallar si falta ese nodo.
 - Activar Google provider + reglas `users` en Firebase Console (ver README).
 - Siguiente: endurecer reglas de rooms por membresía si hace falta.
