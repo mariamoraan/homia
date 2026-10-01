@@ -20,15 +20,15 @@ export default defineConfig({
         'icons/apple-touch-icon.png',
       ],
       manifest: {
-        name: 'Casa · Tareas en pareja',
-        short_name: 'Casa',
-        description: 'Las tareas de casa, como un chat.',
+        name: 'Homia · Tareas del hogar',
+        short_name: 'Homia',
+        description: 'Las tareas del hogar, como un chat.',
         start_url: './',
         scope: './',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#efeae2',
-        theme_color: '#008069',
+        background_color: '#1E1E1E',
+        theme_color: '#141414',
         lang: 'es',
         icons: [
           {

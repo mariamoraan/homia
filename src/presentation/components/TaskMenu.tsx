@@ -5,6 +5,15 @@ import {
   REACTION_LABELS,
   TAG_CATALOG,
 } from '@/domain/catalog/TagCatalog'
+import {
+  CheckCircle2,
+  Minus,
+  Pencil,
+  Plus,
+  ReactionIcon,
+  Trash2,
+  Undo2,
+} from '@/presentation/icons'
 import { es } from '@/presentation/i18n/es'
 
 export function TaskMenu() {
@@ -29,18 +38,18 @@ export function TaskMenu() {
     >
       <div className="task-menu__preview">{task.text}</div>
       <div className="task-menu__reactbar">
-        {QUICK_REACTIONS.map((emoji) => (
+        {QUICK_REACTIONS.map((reactionId) => (
           <button
-            key={emoji}
+            key={reactionId}
             type="button"
-            className={task.reactions.includes(emoji) ? 'is-on' : ''}
-            aria-label={REACTION_LABELS[emoji]}
+            className={task.reactions.includes(reactionId) ? 'is-on' : ''}
+            aria-label={REACTION_LABELS[reactionId]}
             onClick={() => {
-              useCases.mutations.toggleReaction.execute(task.id, emoji)
+              useCases.mutations.toggleReaction.execute(task.id, reactionId)
               openMenu(task.id, menuExpanded)
             }}
           >
-            {emoji}
+            <ReactionIcon id={reactionId} size={18} />
           </button>
         ))}
         <button
@@ -49,7 +58,7 @@ export function TaskMenu() {
           aria-label={es.moreIcons}
           onClick={() => openMenu(task.id, !menuExpanded)}
         >
-          {menuExpanded ? '−' : '+'}
+          {menuExpanded ? <Minus size={18} /> : <Plus size={18} />}
         </button>
       </div>
       <div className={`task-menu__panel${menuExpanded ? ' task-menu__panel--on' : ''}`}>
@@ -57,19 +66,21 @@ export function TaskMenu() {
           <div key={group.title}>
             <h4>{group.title}</h4>
             <div className="task-menu__grid">
-              {group.items.map(([emoji, label]) => (
+              {group.items.map(([reactionId, label]) => (
                 <button
-                  key={emoji}
+                  key={reactionId}
                   type="button"
                   className={`task-menu__opt${
-                    task.reactions.includes(emoji) ? ' task-menu__opt--on' : ''
+                    task.reactions.includes(reactionId) ? ' task-menu__opt--on' : ''
                   }`}
                   onClick={() => {
-                    useCases.mutations.toggleReaction.execute(task.id, emoji)
+                    useCases.mutations.toggleReaction.execute(task.id, reactionId)
                     openMenu(task.id, true)
                   }}
                 >
-                  <span className="e">{emoji}</span>
+                  <span className="task-menu__opt-ic">
+                    <ReactionIcon id={reactionId} size={16} />
+                  </span>
                   <span>{label}</span>
                 </button>
               ))}
@@ -86,7 +97,9 @@ export function TaskMenu() {
           }}
         >
           <span>{task.done ? es.markPending : es.markDone}</span>
-          <span className="task-menu__ic">{task.done ? '↩️' : '✅'}</span>
+          <span className="task-menu__ic">
+            {task.done ? <Undo2 size={18} /> : <CheckCircle2 size={18} />}
+          </span>
         </button>
         <button
           type="button"
@@ -96,7 +109,9 @@ export function TaskMenu() {
           }}
         >
           <span>{es.edit}</span>
-          <span className="task-menu__ic">✏️</span>
+          <span className="task-menu__ic">
+            <Pencil size={18} />
+          </span>
         </button>
         <button
           type="button"
@@ -107,7 +122,9 @@ export function TaskMenu() {
           }}
         >
           <span>{es.remove}</span>
-          <span className="task-menu__ic">🗑️</span>
+          <span className="task-menu__ic">
+            <Trash2 size={18} />
+          </span>
         </button>
       </div>
     </div>

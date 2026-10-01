@@ -1,17 +1,28 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme="indigo">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
-    <title>Casa · Tareas en pareja</title>
-    <meta name="theme-color" content="#008069" />
-    <meta name="description" content="Las tareas de casa, como un chat." />
+    <title>Homia · Tareas del hogar</title>
+    <meta name="theme-color" content="#141414" />
+    <meta name="description" content="Las tareas del hogar, como un chat." />
     <link rel="icon" href="/icons/icon-192.png" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="Casa" />
+    <meta name="apple-mobile-web-app-title" content="Homia" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <script>
+      try {
+        var t = localStorage.getItem('homia-theme')
+        if (t === 'indigo' || t === 'coral') {
+          document.documentElement.dataset.theme = t
+          var c = t === 'coral' ? '#1c1c1e' : '#141414'
+          var m = document.querySelector('meta[name="theme-color"]')
+          if (m) m.setAttribute('content', c)
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

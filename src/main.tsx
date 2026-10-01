@@ -7,7 +7,10 @@ import { AppShell } from '@/presentation/app/AppShell'
 import { OnboardingFlow } from '@/presentation/components/OnboardingFlow'
 import { Toast } from '@/presentation/components/Toast'
 import { useAppStore } from '@/presentation/store/appStore'
+import { applyTheme, readStoredTheme } from '@/presentation/theme/theme'
 import '@/presentation/styles/main.scss'
+
+applyTheme(readStoredTheme())
 
 if (import.meta.env.PROD) {
   registerSW({ immediate: true })

@@ -13,9 +13,9 @@ export function parseHashtags(text: string): { text: string; reactions: string[]
   const reactions: string[] = []
   const cleaned = text
     .replace(/(^|\s)#([\p{L}]+)/gu, (match, space: string, word: string) => {
-      const emoji = HASHTAG_TO_REACTION[word.toLowerCase()]
-      if (emoji) {
-        if (!reactions.includes(emoji)) reactions.push(emoji)
+      const reactionId = HASHTAG_TO_REACTION[word.toLowerCase()]
+      if (reactionId) {
+        if (!reactions.includes(reactionId)) reactions.push(reactionId)
         return space
       }
       return match
@@ -150,8 +150,8 @@ export function buildTask(
 ): Task {
   const parsed = parseHashtags(text)
   const reactions = [...parsed.reactions]
-  for (const emoji of extraReactions) {
-    if (!reactions.includes(emoji)) reactions.push(emoji)
+  for (const reactionId of extraReactions) {
+    if (!reactions.includes(reactionId)) reactions.push(reactionId)
   }
   return {
     id: createTaskId(),
@@ -174,10 +174,10 @@ export function toggleTaskDone(task: Task, by: PersonId): Task {
   }
 }
 
-export function toggleTaskReaction(task: Task, emoji: string): Task {
-  const reactions = task.reactions.includes(emoji)
-    ? task.reactions.filter((r) => r !== emoji)
-    : [...task.reactions, emoji]
+export function toggleTaskReaction(task: Task, reactionId: string): Task {
+  const reactions = task.reactions.includes(reactionId)
+    ? task.reactions.filter((r) => r !== reactionId)
+    : [...task.reactions, reactionId]
   return { ...task, reactions }
 }
 

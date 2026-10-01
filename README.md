@@ -1,6 +1,6 @@
-# Casa · Couple chores (chat-style PWA)
+# Homia · Tareas del hogar (chat-style PWA)
 
-Household tasks as a WhatsApp-style chat for two people. Works fully offline on one device; optional Firebase Realtime Database syncs a shared room between two phones.
+Household tasks as a chat-style PWA for two people. Works fully offline on one device; optional Firebase Realtime Database syncs a shared group between two phones.
 
 ## Stack
 
@@ -71,15 +71,15 @@ VITE_FIREBASE_APP_ID=...
 
 ### Pairing
 
-1. Install the PWA → Settings → **Crear casa compartida** → share the code.
+1. Install the PWA → Settings → **Crear grupo compartido** → share the code.
 2. Partner installs → Settings → enter the code → **Unirme**.
 3. Set names in Settings. Changes sync in real time.
 
-Deep link: `?casa=<roomCode>` joins after confirmation (local tasks are replaced).
+Deep link: `?casa=<roomCode>` joins after confirmation (local tasks are replaced). The query param name is legacy; keep it for existing shared links.
 
 ### Google login (optional)
 
-Settings → **Continuar con Google**. Signing in links the current house to your account and merges any houses already on that account. With more than one house, use the header / Settings switcher to change houses. Signing out does not delete local tasks; disconnect removes the current house from the account.
+Settings → **Continuar con Google**. Signing in links the current group to your account and merges any groups already on that account. With more than one group, use the header / Settings switcher to change groups. Signing out does not delete local tasks; disconnect removes the current group from the account.
 
 ## Notifications
 

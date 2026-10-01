@@ -33,7 +33,7 @@ export function AppShell() {
     }
     const onInstalled = () => {
       setInstallPrompt(null)
-      showToast('App instalada 🎉')
+      showToast('App instalada')
     }
 
     document.addEventListener('keydown', onKeyDown)

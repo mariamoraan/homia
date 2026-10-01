@@ -118,7 +118,7 @@ export function createApp() {
     const pendingJoinCode = await useCases.mutations.bootSync.execute({
       confirmJoinDeepLink: () =>
         window.confirm(
-          '¿Unirte a la casa compartida? Las tareas de este dispositivo se sustituirán por las de la casa.',
+          '¿Unirte al grupo compartido? Las tareas de este dispositivo se sustituirán por las del grupo.',
         ),
     })
 

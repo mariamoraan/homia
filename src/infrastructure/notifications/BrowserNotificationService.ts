@@ -26,10 +26,10 @@ export class BrowserNotificationService implements NotificationPort {
       navigator.serviceWorker
     ) {
       void navigator.serviceWorker.ready.then((registration) => {
-        void registration.showNotification('Casa 🏠', {
+        void registration.showNotification('Homia', {
           body,
           icon: '/icons/icon-192.png',
-          tag: `casa-${taskId}`,
+          tag: `homia-${taskId}`,
         })
       })
     }

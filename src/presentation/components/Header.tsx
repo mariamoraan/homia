@@ -1,6 +1,7 @@
 import { useAppContainer } from '@/presentation/app/AppContainerContext'
 import { useAppStore } from '@/presentation/store/appStore'
 import { displayName } from '@/domain/session/AppSession'
+import { ArrowUpDown, ChevronDown, EllipsisVertical, Home } from '@/presentation/icons'
 import { es } from '@/presentation/i18n/es'
 
 export function Header() {
@@ -26,7 +27,7 @@ export function Header() {
         className={`header__avatar header__avatar--${session.me}`}
         aria-hidden="true"
       >
-        🏠
+        <img src="/icons/icon-192.png" alt="" width={40} height={40} />
       </div>
       <button
         type="button"
@@ -42,7 +43,11 @@ export function Header() {
       >
         <div className="header__title">
           {activeLabel && canSwitchGroups ? activeLabel : es.appTitle}
-          {canSwitchGroups ? <span className="header__caret" aria-hidden>▾</span> : null}
+          {canSwitchGroups ? (
+            <span className="header__caret" aria-hidden>
+              <ChevronDown size={14} strokeWidth={2.5} />
+            </span>
+          ) : null}
         </div>
         <div className="header__subtitle">{subtitle}</div>
       </button>
@@ -54,9 +59,7 @@ export function Header() {
           title={es.switchHome}
           onClick={() => setGroupsOpen(true)}
         >
-          <svg viewBox="0 0 24 24">
-            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-          </svg>
+          <Home size={22} strokeWidth={2} />
         </button>
       )}
       {!session.room && (
@@ -67,9 +70,7 @@ export function Header() {
           title={es.swapPerson}
           onClick={() => useCases.mutations.swapPerson.execute()}
         >
-          <svg viewBox="0 0 24 24">
-            <path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3 5 6.99h3V14h2V6.99h3L9 3z" />
-          </svg>
+          <ArrowUpDown size={22} strokeWidth={2} />
         </button>
       )}
       <button
@@ -78,9 +79,7 @@ export function Header() {
         aria-label={es.settings}
         onClick={() => setSettingsOpen(true)}
       >
-        <svg viewBox="0 0 24 24">
-          <path d="M12 7a2 2 0 1 0-.001-4.001A2 2 0 0 0 12 7zm0 2a2 2 0 1 0-.001 3.999A2 2 0 0 0 12 9zm0 6a2 2 0 1 0-.001 3.999A2 2 0 0 0 12 15z" />
-        </svg>
+        <EllipsisVertical size={22} strokeWidth={2} />
       </button>
     </header>
   )

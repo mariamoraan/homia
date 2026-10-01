@@ -5,6 +5,7 @@ import {
 } from '@/domain/session/AppSession'
 import type { AuthUser } from '@/domain/session/AuthUser'
 import type { GroupMembership } from '@/domain/session/GroupMembership'
+import { migrateFilter } from '@/domain/catalog/TagCatalog'
 import { normalizeTask } from '@/domain/task/Task'
 import type { PersonId } from '@/domain/task/PersonId'
 import type { SessionRepository } from '@/domain/ports/SessionRepository'
@@ -60,7 +61,9 @@ export class LocalStorageSessionRepository implements SessionRepository {
           a: parsed.names?.a ?? 'Yo',
           b: parsed.names?.b ?? 'Pareja',
         },
-        filter: parsed.filter ?? 'all',
+        filter: migrateFilter(
+          typeof parsed.filter === 'string' ? parsed.filter : 'all',
+        ),
         room: typeof parsed.room === 'string' ? parsed.room : null,
         tasks: parsed.tasks.map((task) => normalizeTask(task)),
         onboardingDone,

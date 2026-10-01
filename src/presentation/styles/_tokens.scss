@@ -1,53 +1,56 @@
-:root {
-  --header: #008069;
-  --header-ink: #fff;
-  --bg: #efeae2;
-  --pattern: 0.055;
-  --out: #d9fdd3;
-  --in: #ffffff;
-  --ink: #111b21;
-  --ink2: #667781;
-  --accent: #00a884;
-  --tick: #53bdeb;
-  --bar: #f0f2f5;
-  --field: #ffffff;
-  --sheet: #ffffff;
-  --line: #e9edef;
-  --chip: #ffffff;
-  --chip-on: #d9fdd3;
-  --chip-on-ink: #0b5c47;
-  --system: #fff5c4;
-  --system-ink: #54656f;
-  --shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
-  --who-a: #1f7aec;
-  --who-b: #c2185b;
+:root,
+[data-theme='indigo'] {
+  --header: #141414;
+  --header-ink: #e5e5e5;
+  --bg: #1e1e1e;
+  --pattern: 0.04;
+  --out: #3537a0;
+  --in: #2a2a2c;
+  --ink: #e5e5e5;
+  --ink2: #9a9aa3;
+  --accent: #6366f1;
+  --tick: #a5a6ff;
+  --bar: #252528;
+  --field: #2a2a2c;
+  --sheet: #252528;
+  --line: #3a3a3e;
+  --chip: #2a2a2c;
+  --chip-on: #4f52e0;
+  --chip-on-ink: #ffffff;
+  --system: #2f2f24;
+  --system-ink: #d4c48a;
+  --shadow: 0 1px 0.5px rgba(0, 0, 0, 0.45);
+  --who-a: #6aabf0;
+  --who-b: #f08ab8;
+  --theme-overlay: rgba(0, 0, 0, 0.55);
+  --desktop-bg: #0a0a0a;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --header: #1f2c34;
-    --header-ink: #e9edef;
-    --bg: #0b141a;
-    --pattern: 0.05;
-    --out: #005c4b;
-    --in: #202c33;
-    --ink: #e9edef;
-    --ink2: #8696a0;
-    --accent: #00a884;
-    --tick: #53bdeb;
-    --bar: #1f2c34;
-    --field: #2a3942;
-    --sheet: #233138;
-    --line: #2f3b43;
-    --chip: #202c33;
-    --chip-on: #005c4b;
-    --chip-on-ink: #e9edef;
-    --system: #182229;
-    --system-ink: #ffd279;
-    --shadow: 0 1px 0.5px rgba(0, 0, 0, 0.4);
-    --who-a: #53a6fa;
-    --who-b: #ff7eb6;
-  }
+[data-theme='coral'] {
+  --header: #1c1c1e;
+  --header-ink: #ebebf4;
+  --bg: #2c2c2e;
+  --pattern: 0.04;
+  --out: #a8243c;
+  --in: #363638;
+  --ink: #ebebf4;
+  --ink2: #a4a4ae;
+  --accent: #ff3b5d;
+  --tick: #ff7a91;
+  --bar: #323234;
+  --field: #363638;
+  --sheet: #323234;
+  --line: #48484c;
+  --chip: #363638;
+  --chip-on: #e63252;
+  --chip-on-ink: #ffffff;
+  --system: #353228;
+  --system-ink: #d4c48a;
+  --shadow: 0 1px 0.5px rgba(0, 0, 0, 0.45);
+  --who-a: #6aabf0;
+  --who-b: #f08ab8;
+  --theme-overlay: rgba(0, 0, 0, 0.55);
+  --desktop-bg: #121214;
 }
 
 *,
@@ -84,13 +87,7 @@ button {
 
 @media (min-width: 761px) {
   body {
-    background: #d1d7db;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    body {
-      background: #0a1014;
-    }
+    background: var(--desktop-bg);
   }
 }
 

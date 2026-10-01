@@ -3,7 +3,15 @@ import { useAppContainer } from '@/presentation/app/AppContainerContext'
 import { useAppStore } from '@/presentation/store/appStore'
 import { displayName } from '@/domain/session/AppSession'
 import { otherPerson } from '@/domain/task/PersonId'
+import { Bell, Circle, Download } from '@/presentation/icons'
 import { es } from '@/presentation/i18n/es'
+import {
+  THEME_META,
+  THEMES,
+  applyTheme,
+  readStoredTheme,
+  type ThemeId,
+} from '@/presentation/theme/theme'
 
 export function SettingsSheet() {
   const { useCases, notifications, auth } = useAppContainer()
@@ -22,12 +30,14 @@ export function SettingsSheet() {
   const [joinCode, setJoinCode] = useState('')
   const [notifPermission, setNotifPermission] = useState(notifications.permission())
   const [authBusy, setAuthBusy] = useState(false)
+  const [theme, setTheme] = useState<ThemeId>(() => readStoredTheme())
 
   useEffect(() => {
     if (!settingsOpen) return
     setNameA(displayName(session.names, session.me))
     setNameB(displayName(session.names, otherPerson(session.me)))
     setNotifPermission(notifications.permission())
+    setTheme(readStoredTheme())
   }, [settingsOpen, session.names, session.me, notifications])
 
   if (!settingsOpen) return null
@@ -52,6 +62,11 @@ export function SettingsSheet() {
         ? 'En Safari: Compartir → Añadir a pantalla de inicio'
         : 'En el menú del navegador: Instalar app / Añadir a pantalla de inicio',
     )
+  }
+
+  const selectTheme = (next: ThemeId) => {
+    setTheme(next)
+    applyTheme(next)
   }
 
   return (
@@ -97,6 +112,35 @@ export function SettingsSheet() {
           >
             {es.close}
           </button>
+        </div>
+
+        <hr className="sheet__sep" />
+        <h4 className="sheet__section-title">{es.appearance}</h4>
+        <div className="theme-picker" role="radiogroup" aria-label={es.appearance}>
+          {THEMES.map((id) => {
+            const meta = THEME_META[id]
+            const selected = theme === id
+            return (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                className={`theme-picker__option${selected ? ' theme-picker__option--on' : ''}`}
+                onClick={() => selectTheme(id)}
+              >
+                <span className="theme-picker__swatches" aria-hidden>
+                  <span style={{ background: meta.header }} />
+                  <span style={{ background: meta.accent }} />
+                  <span style={{ background: meta.surface }} />
+                  <span style={{ background: meta.ink }} />
+                </span>
+                <span className="theme-picker__label">
+                  {id === 'indigo' ? es.themeIndigo : es.themeCoral}
+                </span>
+              </button>
+            )
+          })}
         </div>
 
         {syncStatus.available && auth.available ? (
@@ -196,11 +240,18 @@ export function SettingsSheet() {
           <p className="sheet__hint">{es.firebaseMissing}</p>
         ) : session.room ? (
           <>
-            <p className="sheet__hint">
+            <p className="sheet__hint sheet__hint--status">
+              <Circle
+                className={`sheet__status-dot${syncConnected ? ' sheet__status-dot--on' : ' sheet__status-dot--off'}`}
+                size={10}
+                strokeWidth={0}
+                fill="currentColor"
+                aria-hidden
+              />
               {syncConnected
-                ? '🟢 En línea'
-                : '🟠 Sin conexión: se sincronizará al volver'}{' '}
-              · Código de vuestra casa:
+                ? 'En línea'
+                : 'Sin conexión: se sincronizará al volver'}{' '}
+              · Código de vuestro grupo:
             </p>
             <div className="sheet__code">{session.room}</div>
             <div className="btn-row">
@@ -223,10 +274,10 @@ export function SettingsSheet() {
                 className="btn btn--ghost"
                 onClick={async () => {
                   const url = `${location.origin}${location.pathname}?casa=${session.room}`
-                  const text = `Únete a nuestra casa 🏠 Código: ${session.room}`
+                  const text = `Únete a nuestro grupo en Homia. Código: ${session.room}`
                   if (navigator.share) {
                     try {
-                      await navigator.share({ title: 'Casa', text, url })
+                      await navigator.share({ title: 'Homia', text, url })
                     } catch {
                       // User cancelled share sheet.
                     }
@@ -253,6 +304,7 @@ export function SettingsSheet() {
                     setNotifPermission(notifications.permission())
                   }}
                 >
+                  <Bell size={16} strokeWidth={2} aria-hidden />
                   {es.notifyNew}
                 </button>
               )}
@@ -303,7 +355,7 @@ export function SettingsSheet() {
                   if (
                     session.tasks.length &&
                     !window.confirm(
-                      'Las tareas de este dispositivo se sustituirán por las de la casa. ¿Continuar?',
+                      'Las tareas de este dispositivo se sustituirán por las del grupo. ¿Continuar?',
                     )
                   ) {
                     return
@@ -321,6 +373,7 @@ export function SettingsSheet() {
         <hr className="sheet__sep" />
         <div className="btn-row">
           <button type="button" className="btn btn--ghost" onClick={() => void install()}>
+            <Download size={16} strokeWidth={2} aria-hidden />
             {es.installApp}
           </button>
           <button

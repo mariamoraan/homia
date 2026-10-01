@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Homia">
+  <rect width="512" height="512" fill="#000000"/>
+  <path
+    fill="none"
+    stroke="#FFFFFF"
+    stroke-width="26"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+    d="
+      M118 236
+      L256 112
+      L394 236
+      V404
+      H300
+      V318
+      H212
+      V404
+      H118
+      Z
+    "
+  />
+</svg>

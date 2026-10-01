@@ -1,3 +1,4 @@
+import { migrateReactionIds } from '../catalog/TagCatalog'
 import type { PersonId } from './PersonId'
 
 export interface ChecklistItem {
@@ -57,9 +58,11 @@ export function normalizeTask(
   },
   id?: string,
 ): Task {
-  const reactions: string[] = Array.isArray(raw.reactions)
-    ? raw.reactions.map(String)
-    : Object.values(raw.reactions ?? {}).map(String)
+  const reactions: string[] = migrateReactionIds(
+    Array.isArray(raw.reactions)
+      ? raw.reactions.map(String)
+      : Object.values(raw.reactions ?? {}).map(String),
+  )
 
   return {
     id: id ?? raw.id ?? createTaskId(),

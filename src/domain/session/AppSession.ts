@@ -19,7 +19,7 @@ export interface AppSession {
   onboardingDone: boolean
   /** Cached Google profile when signed in (Firebase Auth is source of truth). */
   auth: AuthUser | null
-  /** Groups linked to the signed-in account (supports multiple casas). */
+  /** Groups linked to the signed-in account (supports multiple groups). */
   memberships: GroupMembership[]
 }
 
@@ -61,7 +61,7 @@ export function createDemoSession(): AppSession {
         ts: now - day - 3 * hour,
         done: true,
         doneBy: 'a',
-        reactions: ['🛒', '⭐'],
+        reactions: ['shopping', 'important'],
         checklist: [],
       },
       {
@@ -71,7 +71,7 @@ export function createDemoSession(): AppSession {
         ts: now - 5 * hour,
         done: false,
         doneBy: null,
-        reactions: ['🗑️', '🔥'],
+        reactions: ['trash', 'urgent'],
         checklist: [],
       },
       {
@@ -81,7 +81,7 @@ export function createDemoSession(): AppSession {
         ts: now - 3 * hour,
         done: false,
         doneBy: null,
-        reactions: ['🔧', '🙋'],
+        reactions: ['repair', 'mine'],
         checklist: [],
       },
       {
@@ -91,7 +91,7 @@ export function createDemoSession(): AppSession {
         ts: now - hour,
         done: false,
         doneBy: null,
-        reactions: ['📄', '📅'],
+        reactions: ['paperwork', 'this-week'],
         checklist: [],
       },
     ],

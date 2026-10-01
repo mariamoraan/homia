@@ -22,7 +22,7 @@ import {
 
 function syncErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : ''
-  if (message === 'nocode') return 'No existe esa casa. Revisa el código'
+  if (message === 'nocode') return 'No existe ese grupo. Revisa el código'
   if (message === 'timeout') return 'Sin conexión. Inténtalo de nuevo'
   if (message === 'permission') return 'Sin permiso en Firebase: revisa las reglas'
   if (message === 'not-ready') return 'Aún sincronizando. Inténtalo de nuevo'
@@ -46,7 +46,7 @@ function membershipAccountErrorToast(error: unknown): string {
   if (isFirebasePermissionError(error)) {
     return 'Sin permiso en users/{uid}: publica las reglas del README en RTDB'
   }
-  return 'No se pudieron sincronizar tus casas en la cuenta'
+  return 'No se pudieron sincronizar tus grupos en la cuenta'
 }
 
 async function persistMemberships(
@@ -203,13 +203,13 @@ export class ToggleTaskDoneMutation {
 export class ToggleReactionMutation {
   constructor(private readonly uow: SessionUnitOfWork) {}
 
-  execute(taskId: string, emoji: string): void {
+  execute(taskId: string, reactionId: string): void {
     const session = this.uow.session
     this.uow.commit(
       {
         ...session,
         tasks: session.tasks.map((task) =>
-          task.id === taskId ? toggleTaskReaction(task, emoji) : task,
+          task.id === taskId ? toggleTaskReaction(task, reactionId) : task,
         ),
       },
       { stickScroll: false },
@@ -343,7 +343,7 @@ export class CreateSharedRoomMutation {
       await this.uow.services.sync.push(this.uow.session)
       await this.uow.services.sync.startListening()
       await linkCurrentRoomIfNeeded(this.uow)
-      this.uow.toast('Casa creada. Pasa el código a tu pareja')
+      this.uow.toast('Grupo creado. Pasa el código a tu pareja')
     } catch (error) {
       const session = this.uow.session
       if (session.room === code) {
@@ -364,7 +364,7 @@ export class JoinSharedRoomMutation {
 
   async execute(
     rawCode: string,
-    successToast = 'Unido 🏠 Pon tu nombre arriba',
+    successToast = 'Unido. Pon tu nombre arriba',
     myName?: string,
   ): Promise<boolean> {
     const code = normalizeRoomCode(rawCode)
@@ -545,7 +545,7 @@ export class BootSyncMutation {
           code !== this.uow.session.room &&
           options.confirmJoinDeepLink()
         ) {
-          await this.joinRoom.execute(code, 'Unido a la casa compartida 🏠')
+          await this.joinRoom.execute(code, 'Unido al grupo compartido')
         }
         return null
       }
@@ -645,7 +645,7 @@ export class ApplyAuthUserMutation {
       const count = memberships.length
       this.uow.toast(
         count > 1
-          ? `Sesión iniciada · ${count} casas en tu cuenta`
+          ? `Sesión iniciada · ${count} grupos en tu cuenta`
           : 'Sesión iniciada con Google',
       )
     }
@@ -705,11 +705,11 @@ export class SwitchGroupMutation {
     const session = this.uow.session
     const membership = session.memberships.find((item) => item.room === code)
     if (!membership) {
-      this.uow.toast('Esa casa no está en tu cuenta')
+      this.uow.toast('Ese grupo no está en tu cuenta')
       return
     }
     if (session.room === code) {
-      if (!options.silent) this.uow.toast('Ya estás en esa casa')
+      if (!options.silent) this.uow.toast('Ya estás en ese grupo')
       return
     }
     if (!this.uow.services.sync.available) {

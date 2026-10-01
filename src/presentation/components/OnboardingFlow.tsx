@@ -22,10 +22,10 @@ async function copyRoomCode(room: string, showToast: (message: string) => void) 
 
 async function shareRoomLink(room: string, showToast: (message: string) => void) {
   const url = `${location.origin}${location.pathname}?casa=${room}`
-  const text = `Únete a nuestra casa 🏠 Código: ${room}`
+  const text = `Únete a nuestro grupo en Homia. Código: ${room}`
   if (navigator.share) {
     try {
-      await navigator.share({ title: 'Casa', text, url })
+      await navigator.share({ title: 'Homia', text, url })
     } catch {
       // User cancelled share sheet.
     }
@@ -60,7 +60,7 @@ export function OnboardingFlow({ pendingJoinCode }: { pendingJoinCode: string | 
     if (!auth.available || !syncStatus.available) return
     setBusy(true)
     try {
-      // ApplyAuthUser completes onboarding when the account already has houses.
+      // ApplyAuthUser completes onboarding when the account already has groups.
       await useCases.mutations.signInWithGoogle.execute()
     } finally {
       setBusy(false)
@@ -100,7 +100,7 @@ export function OnboardingFlow({ pendingJoinCode }: { pendingJoinCode: string | 
     try {
       const ok = await useCases.mutations.joinSharedRoom.execute(
         joinCode,
-        'Unido a la casa compartida 🏠',
+        'Unido al grupo compartido',
         trimmed,
       )
       if (ok) finish()
@@ -114,8 +114,8 @@ export function OnboardingFlow({ pendingJoinCode }: { pendingJoinCode: string | 
       <div className="onboarding__card">
         {step === 'welcome' && (
           <>
-            <div className="onboarding__emoji" aria-hidden>
-              🏠
+            <div className="onboarding__mark" aria-hidden>
+              <img src="/icons/icon-192.png" alt="" width={64} height={64} />
             </div>
             <h1 className="onboarding__title">{es.onboardingWelcomeTitle}</h1>
             <p className="onboarding__body">{es.onboardingWelcomeBody}</p>

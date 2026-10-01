@@ -8,6 +8,7 @@ import {
   splitBulletTasks,
   stripQuickPrefix,
 } from '@/domain/task/TaskActions'
+import { Check, ListChecks, ReactionIcon, SendHorizontal, X } from '@/presentation/icons'
 import { es } from '@/presentation/i18n/es'
 
 type ListDraftItem = { key: string; text: string; done: boolean }
@@ -90,18 +91,18 @@ export function Composer() {
 
   const activePrefix = (): string => {
     if (pendingReaction) {
-      const match = QUICK_STARTS.find(([emoji]) => emoji === pendingReaction)
+      const match = QUICK_STARTS.find(([id]) => id === pendingReaction)
       if (match) return match[1]
     }
     return detectQuickPrefix(value.split('\n')[0] ?? '')
   }
 
-  const applyQuickStart = (emoji: string, prefix: string) => {
+  const applyQuickStart = (reactionId: string, prefix: string) => {
     if (editingTaskId) return
     if (listMode) {
       const body = stripQuickPrefix(listTitle)
       setListTitle(prefix + body)
-      setPendingReaction(emoji)
+      setPendingReaction(reactionId)
       requestAnimationFrame(() => {
         titleRef.current?.focus()
         const start = prefix.length
@@ -112,7 +113,7 @@ export function Composer() {
     const body = stripQuickPrefix(value)
     const next = prefix + body
     setValue(next)
-    setPendingReaction(emoji)
+    setPendingReaction(reactionId)
     requestAnimationFrame(() => {
       const input = inputRef.current
       if (!input) return
@@ -325,16 +326,18 @@ export function Composer() {
           onClick={toggleListMode}
           aria-pressed={listMode}
         >
+          <ListChecks size={14} strokeWidth={2.25} />
           {es.listChip}
         </button>
-        {QUICK_STARTS.map(([emoji, prefix]) => (
+        {QUICK_STARTS.map(([reactionId, prefix]) => (
           <button
             key={prefix}
             type="button"
-            className={`chip chip--quick${pendingReaction === emoji ? ' chip--on' : ''}`}
-            onClick={() => applyQuickStart(emoji, prefix)}
+            className={`chip chip--quick${pendingReaction === reactionId ? ' chip--on' : ''}`}
+            onClick={() => applyQuickStart(reactionId, prefix)}
           >
-            {emoji} {prefix.replace(/[: ]+$/, '')}
+            <ReactionIcon id={reactionId} size={14} />
+            {prefix.replace(/[: ]+$/, '')}
           </button>
         ))}
       </div>
@@ -354,7 +357,7 @@ export function Composer() {
             resetComposer()
           }}
         >
-          ✕
+          <X size={16} strokeWidth={2.5} />
         </button>
       </div>
       <div className="composer__row">
@@ -380,9 +383,7 @@ export function Composer() {
                     aria-label={item.done ? es.markPending : es.markDone}
                     onClick={() => toggleListItemDone(item.key)}
                   >
-                    <svg viewBox="0 0 24 24">
-                      <path d="M5 12.5l4.5 4.5L19 7.5" />
-                    </svg>
+                    <Check size={12} strokeWidth={3} />
                   </button>
                   <input
                     ref={(node) => {
@@ -425,9 +426,7 @@ export function Composer() {
           aria-label={es.send}
           onClick={submit}
         >
-          <svg viewBox="0 0 24 24">
-            <path d="M1.1 21.76 23 12 1.1 2.24 1 9.85 16 12 1 14.15z" />
-          </svg>
+          <SendHorizontal size={22} strokeWidth={2} />
         </button>
       </div>
     </div>
