@@ -6,6 +6,7 @@ import type {
 } from '@/domain/ports/RoomSyncPort'
 import { normalizeTask } from '@/domain/task/Task'
 import type { FirebaseWebConfig } from '@/infrastructure/config/firebaseConfig'
+import { getFirebaseApp } from '@/infrastructure/firebase/firebaseApp'
 
 export class NullRoomSync implements RoomSyncPort {
   readonly available = false
@@ -57,10 +58,11 @@ export class FirebaseRoomSync implements RoomSyncPort {
 
   private async ensureDb() {
     if (this.db) return this.db
-    const { initializeApp, getApps } = await import('firebase/app')
-    const { getDatabase, onValue, ref } = await import('firebase/database')
+    const [{ getDatabase, onValue, ref }, app] = await Promise.all([
+      import('firebase/database'),
+      getFirebaseApp(this.config),
+    ])
 
-    const app = getApps().length ? getApps()[0]! : initializeApp(this.config)
     this.db = getDatabase(app)
 
     const connectedRef = ref(this.db, '.info/connected')

@@ -5,6 +5,7 @@ import { Chat } from '@/presentation/components/Chat'
 import { Composer } from '@/presentation/components/Composer'
 import { TaskMenu } from '@/presentation/components/TaskMenu'
 import { SettingsSheet } from '@/presentation/components/SettingsSheet'
+import { GroupSwitcherSheet } from '@/presentation/components/GroupSwitcherSheet'
 import { Toast } from '@/presentation/components/Toast'
 import { useAppStore, type BeforeInstallPromptEvent } from '@/presentation/store/appStore'
 import { useVisualViewport } from '@/presentation/hooks/useVisualViewport'
@@ -12,6 +13,7 @@ import { useVisualViewport } from '@/presentation/hooks/useVisualViewport'
 export function AppShell() {
   const closeMenu = useAppStore((s) => s.closeMenu)
   const setSettingsOpen = useAppStore((s) => s.setSettingsOpen)
+  const setGroupsOpen = useAppStore((s) => s.setGroupsOpen)
   const setInstallPrompt = useAppStore((s) => s.setInstallPrompt)
   const showToast = useAppStore((s) => s.showToast)
 
@@ -22,6 +24,7 @@ export function AppShell() {
       if (event.key === 'Escape') {
         closeMenu()
         setSettingsOpen(false)
+        setGroupsOpen(false)
       }
     }
     const onInstallPrompt = (event: Event) => {
@@ -41,7 +44,7 @@ export function AppShell() {
       window.removeEventListener('beforeinstallprompt', onInstallPrompt as EventListener)
       window.removeEventListener('appinstalled', onInstalled)
     }
-  }, [closeMenu, setSettingsOpen, setInstallPrompt, showToast])
+  }, [closeMenu, setSettingsOpen, setGroupsOpen, setInstallPrompt, showToast])
 
   return (
     <>
@@ -53,6 +56,7 @@ export function AppShell() {
       </div>
       <TaskMenu />
       <SettingsSheet />
+      <GroupSwitcherSheet />
       <Toast />
     </>
   )

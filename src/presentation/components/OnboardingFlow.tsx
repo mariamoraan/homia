@@ -40,7 +40,7 @@ async function shareRoomLink(room: string, showToast: (message: string) => void)
 }
 
 export function OnboardingFlow({ pendingJoinCode }: { pendingJoinCode: string | null }) {
-  const { useCases } = useAppContainer()
+  const { useCases, auth } = useAppContainer()
   const session = useAppStore((s) => s.session)
   const showToast = useAppStore((s) => s.showToast)
   const syncStatus = useCases.queries.getSyncStatus.execute()
@@ -54,6 +54,20 @@ export function OnboardingFlow({ pendingJoinCode }: { pendingJoinCode: string | 
 
   const finish = () => {
     useCases.mutations.completeOnboarding.execute()
+  }
+
+  const signInWithGoogle = async () => {
+    if (!auth.available || !syncStatus.available) return
+    setBusy(true)
+    try {
+      await useCases.mutations.signInWithGoogle.execute()
+      const next = useAppStore.getState().session
+      if (next.auth && (next.room || next.memberships.length > 0)) {
+        finish()
+      }
+    } finally {
+      setBusy(false)
+    }
   }
 
   const createHome = async () => {
@@ -118,6 +132,24 @@ export function OnboardingFlow({ pendingJoinCode }: { pendingJoinCode: string | 
                 {es.onboardingContinue}
               </button>
             </div>
+            {syncStatus.available && auth.available && !session.auth ? (
+              <>
+                <p className="onboarding__divider" aria-hidden>
+                  {es.onboardingOr}
+                </p>
+                <div className="btn-row">
+                  <button
+                    type="button"
+                    className="btn btn--google"
+                    disabled={busy}
+                    onClick={() => void signInWithGoogle()}
+                  >
+                    {es.signInGoogle}
+                  </button>
+                </div>
+                <p className="onboarding__hint">{es.onboardingGoogleHint}</p>
+              </>
+            ) : null}
           </>
         )}
 
@@ -133,7 +165,7 @@ export function OnboardingFlow({ pendingJoinCode }: { pendingJoinCode: string | 
               <button
                 type="button"
                 className="btn"
-                disabled={!syncStatus.available}
+                disabled={!syncStatus.available || busy}
                 onClick={() => setStep('create')}
               >
                 {es.onboardingCreateChoice}
@@ -141,16 +173,35 @@ export function OnboardingFlow({ pendingJoinCode }: { pendingJoinCode: string | 
               <button
                 type="button"
                 className="btn btn--ghost"
-                disabled={!syncStatus.available}
+                disabled={!syncStatus.available || busy}
                 onClick={() => setStep('join')}
               >
                 {es.onboardingJoinChoice}
               </button>
             </div>
+            {syncStatus.available && auth.available && !session.auth ? (
+              <>
+                <p className="onboarding__divider" aria-hidden>
+                  {es.onboardingOr}
+                </p>
+                <div className="btn-row">
+                  <button
+                    type="button"
+                    className="btn btn--google"
+                    disabled={busy}
+                    onClick={() => void signInWithGoogle()}
+                  >
+                    {es.signInGoogle}
+                  </button>
+                </div>
+                <p className="onboarding__hint">{es.onboardingGoogleHint}</p>
+              </>
+            ) : null}
             <div className="btn-row">
               <button
                 type="button"
                 className="btn btn--ghost"
+                disabled={busy}
                 onClick={() => setStep('welcome')}
               >
                 {es.onboardingBack}

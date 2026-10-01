@@ -20,6 +20,7 @@ interface UiState {
   menuExpanded: boolean
   editingTaskId: string | null
   installPrompt: BeforeInstallPromptEvent | null
+  groupsOpen: boolean
 }
 
 interface UiActions {
@@ -36,6 +37,7 @@ interface UiActions {
   startEdit: (taskId: string) => void
   stopEdit: () => void
   setInstallPrompt: (event: BeforeInstallPromptEvent | null) => void
+  setGroupsOpen: (open: boolean) => void
 }
 
 export type AppStore = UiState & UiActions
@@ -52,6 +54,7 @@ export const useAppStore = create<AppStore>((set) => ({
   menuExpanded: false,
   editingTaskId: null,
   installPrompt: null,
+  groupsOpen: false,
 
   setSession: (session) => set({ session }),
   showToast: (message) =>
@@ -71,6 +74,7 @@ export const useAppStore = create<AppStore>((set) => ({
   startEdit: (taskId) => set({ editingTaskId: taskId }),
   stopEdit: () => set({ editingTaskId: null }),
   setInstallPrompt: (event) => set({ installPrompt: event }),
+  setGroupsOpen: (open) => set({ groupsOpen: open }),
 }))
 
 export function createZustandSessionStorePort(

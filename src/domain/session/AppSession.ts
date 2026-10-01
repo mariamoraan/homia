@@ -2,6 +2,8 @@ import { createTaskId, type Task } from '../task/Task'
 import type { PersonId } from '../task/PersonId'
 import type { TaskFilter } from '../task/TaskFilters'
 import { defaultPersonName } from '../task/PersonId'
+import type { AuthUser } from './AuthUser'
+import type { GroupMembership } from './GroupMembership'
 
 export interface PersonNames {
   a: string
@@ -15,6 +17,10 @@ export interface AppSession {
   tasks: Task[]
   room: string | null
   onboardingDone: boolean
+  /** Cached Google profile when signed in (Firebase Auth is source of truth). */
+  auth: AuthUser | null
+  /** Groups linked to the signed-in account (supports multiple casas). */
+  memberships: GroupMembership[]
 }
 
 export function displayName(names: PersonNames, person: PersonId): string {
@@ -29,6 +35,8 @@ export function createEmptySession(): AppSession {
     room: null,
     tasks: [],
     onboardingDone: false,
+    auth: null,
+    memberships: [],
   }
 }
 
@@ -43,6 +51,8 @@ export function createDemoSession(): AppSession {
     filter: 'all',
     room: null,
     onboardingDone: true,
+    auth: null,
+    memberships: [],
     tasks: [
       {
         id: createTaskId(),

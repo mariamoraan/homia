@@ -73,4 +73,18 @@ export const es = {
   onboardingNeedCode: 'Escribe el código',
   onboardingFirebaseMissing:
     'Para crear o unirte a una casa hace falta conectar Firebase. Sigue los pasos del README.md y vuelve a abrir la app.',
+  onboardingGoogleHint: 'Opcional. Si ya tienes casas en tu cuenta, las recuperamos al entrar.',
+  onboardingOr: 'o',
+  account: 'Cuenta',
+  signInGoogle: 'Continuar con Google',
+  signOut: 'Cerrar sesión',
+  accountHint:
+    'Opcional. Si inicias sesión, la casa de este móvil se guarda en tu cuenta y puedes recuperarla en otro dispositivo.',
+  accountSignedInAs: 'Conectado como',
+  yourHomes: 'Tus casas',
+  switchHome: 'Cambiar de casa',
+  currentHome: 'Casa actual',
+  noOtherHomes: 'Solo tienes una casa en la cuenta.',
+  groupsTitle: 'Tus casas',
+  groupsHint: 'Elige la casa con la que quieres trabajar ahora.',
 } as const

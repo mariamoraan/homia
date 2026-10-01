@@ -70,6 +70,12 @@
     text-overflow: ellipsis;
   }
 
+  &__caret {
+    margin-left: 4px;
+    font-size: 12px;
+    opacity: 0.85;
+  }
+
   &__subtitle {
     font-size: 12.5px;
     opacity: 0.85;
@@ -940,6 +946,102 @@
     color: var(--ink2);
     line-height: 1.45;
     margin: 14px 0 0;
+
+    &--tight {
+      margin-top: 6px;
+    }
+  }
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+
+  &__avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: none;
+    background: var(--field);
+
+    &--fallback {
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      color: var(--ink2);
+    }
+  }
+
+  &__text {
+    min-width: 0;
+  }
+
+  &__label {
+    font-size: 12px;
+    color: var(--ink2);
+  }
+
+  &__name {
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__email {
+    font-size: 12.5px;
+    color: var(--ink2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.group-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__item {
+    width: 100%;
+    text-align: left;
+    background: var(--field);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: grid;
+    gap: 2px;
+
+    &:disabled,
+    &--on {
+      outline: 2px solid var(--accent);
+    }
+  }
+
+  &__label {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  &__code {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: var(--ink2);
+    letter-spacing: 0.04em;
+  }
+
+  &__badge {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+    margin-top: 2px;
   }
 }
 
@@ -981,6 +1083,16 @@
     background: none;
     color: #ea0038;
     border: 1.5px solid #ea0038;
+  }
+
+  &--google {
+    background: #fff;
+    color: #1f1f1f;
+    border: 1px solid var(--line);
+  }
+
+  &:disabled {
+    opacity: 0.55;
   }
 }
 
@@ -1110,6 +1222,24 @@
       flex: none;
       min-width: 0;
       width: 100%;
+    }
+  }
+
+  &__divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0 4px;
+    font-size: 12.5px;
+    color: var(--ink2);
+    text-transform: lowercase;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--line);
     }
   }
 }

@@ -1,6 +1,8 @@
 import type { RoomSyncPort } from '@/domain/ports/RoomSyncPort'
 import type { SessionRepository } from '@/domain/ports/SessionRepository'
 import type { NotificationPort } from '@/domain/ports/NotificationPort'
+import type { AuthPort } from '@/domain/ports/AuthPort'
+import type { UserAccountPort } from '@/domain/ports/UserAccountPort'
 import type { SessionStorePort } from '@/application/ports/SessionStorePort'
 import type { AppSession } from '@/domain/session/AppSession'
 import { displayName } from '@/domain/session/AppSession'
@@ -10,6 +12,8 @@ export interface AppServices {
   sync: RoomSyncPort
   notifications: NotificationPort
   store: SessionStorePort
+  auth: AuthPort
+  accounts: UserAccountPort
 }
 
 export class SessionUnitOfWork {

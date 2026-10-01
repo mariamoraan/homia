@@ -6,9 +6,10 @@ import { otherPerson } from '@/domain/task/PersonId'
 import { es } from '@/presentation/i18n/es'
 
 export function SettingsSheet() {
-  const { useCases, notifications } = useAppContainer()
+  const { useCases, notifications, auth } = useAppContainer()
   const settingsOpen = useAppStore((s) => s.settingsOpen)
   const setSettingsOpen = useAppStore((s) => s.setSettingsOpen)
+  const setGroupsOpen = useAppStore((s) => s.setGroupsOpen)
   const session = useAppStore((s) => s.session)
   const syncConnected = useAppStore((s) => s.syncConnected)
   const installPrompt = useAppStore((s) => s.installPrompt)
@@ -20,6 +21,7 @@ export function SettingsSheet() {
   const [nameB, setNameB] = useState('')
   const [joinCode, setJoinCode] = useState('')
   const [notifPermission, setNotifPermission] = useState(notifications.permission())
+  const [authBusy, setAuthBusy] = useState(false)
 
   useEffect(() => {
     if (!settingsOpen) return
@@ -97,6 +99,96 @@ export function SettingsSheet() {
           </button>
         </div>
 
+        {syncStatus.available && auth.available ? (
+          <>
+            <hr className="sheet__sep" />
+            <div className="sheet__section-title">{es.account}</div>
+            {session.auth ? (
+              <>
+                <div className="account-row">
+                  {session.auth.photoURL ? (
+                    <img
+                      className="account-row__avatar"
+                      src={session.auth.photoURL}
+                      alt=""
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="account-row__avatar account-row__avatar--fallback" aria-hidden>
+                      {(session.auth.displayName || session.auth.email || '?')
+                        .slice(0, 1)
+                        .toUpperCase()}
+                    </div>
+                  )}
+                  <div className="account-row__text">
+                    <div className="account-row__label">{es.accountSignedInAs}</div>
+                    <div className="account-row__name">
+                      {session.auth.displayName || session.auth.email || 'Google'}
+                    </div>
+                    {session.auth.email ? (
+                      <div className="account-row__email">{session.auth.email}</div>
+                    ) : null}
+                  </div>
+                </div>
+                {session.memberships.length > 1 ? (
+                  <div className="btn-row">
+                    <button
+                      type="button"
+                      className="btn btn--ghost"
+                      onClick={() => {
+                        setSettingsOpen(false)
+                        setGroupsOpen(true)
+                      }}
+                    >
+                      {es.switchHome} ({session.memberships.length})
+                    </button>
+                  </div>
+                ) : session.memberships.length === 1 ? (
+                  <p className="sheet__hint">{es.noOtherHomes}</p>
+                ) : null}
+                <div className="btn-row">
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    disabled={authBusy}
+                    onClick={async () => {
+                      setAuthBusy(true)
+                      try {
+                        await useCases.mutations.signOut.execute()
+                      } finally {
+                        setAuthBusy(false)
+                      }
+                    }}
+                  >
+                    {es.signOut}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="sheet__hint sheet__hint--tight">{es.accountHint}</p>
+                <div className="btn-row">
+                  <button
+                    type="button"
+                    className="btn btn--google"
+                    disabled={authBusy}
+                    onClick={async () => {
+                      setAuthBusy(true)
+                      try {
+                        await useCases.mutations.signInWithGoogle.execute()
+                      } finally {
+                        setAuthBusy(false)
+                      }
+                    }}
+                  >
+                    {es.signInGoogle}
+                  </button>
+                </div>
+              </>
+            )}
+          </>
+        ) : null}
+
         <hr className="sheet__sep" />
 
         <div className="sheet__section-title">{es.shareWithPartner}</div>
@@ -173,7 +265,7 @@ export function SettingsSheet() {
                       '¿Dejar de compartir? Conservarás las tareas en este móvil.',
                     )
                   ) {
-                    useCases.mutations.leaveSharedRoom.execute()
+                    void useCases.mutations.leaveSharedRoom.execute()
                   }
                 }}
               >

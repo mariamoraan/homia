@@ -11,6 +11,14 @@ import { otherPerson, defaultPersonName } from '@/domain/task/PersonId'
 import type { TaskFilter } from '@/domain/task/TaskFilters'
 import { generateRoomCode, isValidRoomCode, normalizeRoomCode } from '@/domain/room/RoomCode'
 import { displayName, type AppSession } from '@/domain/session/AppSession'
+import type { AuthUser } from '@/domain/session/AuthUser'
+import {
+  membershipLabel,
+  mergeMemberships,
+  removeMembership,
+  upsertMembership,
+  type GroupMembership,
+} from '@/domain/session/GroupMembership'
 
 function syncErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : ''
@@ -18,7 +26,45 @@ function syncErrorMessage(error: unknown): string {
   if (message === 'timeout') return 'Sin conexión. Inténtalo de nuevo'
   if (message === 'permission') return 'Sin permiso en Firebase: revisa las reglas'
   if (message === 'not-ready') return 'Aún sincronizando. Inténtalo de nuevo'
+  if (message === 'redirect') return 'Te redirigimos a Google…'
+  if (message === 'config') return 'Firebase no está configurado'
+  if (message === 'auth') return 'No se pudo iniciar sesión con Google'
   return 'No se pudo conectar con Firebase'
+}
+
+async function persistMemberships(
+  uow: SessionUnitOfWork,
+  uid: string,
+  memberships: GroupMembership[],
+): Promise<void> {
+  const session = uow.session
+  uow.commit({ ...session, memberships }, { push: false })
+  if (uow.services.accounts.available) {
+    try {
+      await uow.services.accounts.saveMemberships(uid, memberships)
+    } catch {
+      uow.toast('No se pudieron guardar tus casas en la cuenta')
+    }
+  }
+}
+
+function localMembershipFromSession(session: AppSession): GroupMembership | null {
+  if (!session.room) return null
+  return {
+    room: session.room,
+    person: session.me,
+    label: membershipLabel(session.names, session.room),
+    joinedAt: Date.now(),
+  }
+}
+
+async function linkCurrentRoomIfNeeded(uow: SessionUnitOfWork): Promise<void> {
+  const session = uow.session
+  if (!session.auth || !session.room) return
+  const membership = localMembershipFromSession(session)
+  if (!membership) return
+  const next = upsertMembership(session.memberships, membership)
+  await persistMemberships(uow, session.auth.uid, next)
 }
 
 export class CreateTaskMutation {
@@ -209,17 +255,32 @@ export class SaveNamesMutation {
     const session = this.uow.session
     const me = session.me
     const other = otherPerson(me)
-    this.uow.commit(
-      {
-        ...session,
-        names: {
-          ...session.names,
-          [me]: myName.trim() || defaultPersonName(me),
-          [other]: partnerName.trim() || defaultPersonName(other),
-        },
-      },
-      { stickScroll: false },
-    )
+    const names = {
+      ...session.names,
+      [me]: myName.trim() || defaultPersonName(me),
+      [other]: partnerName.trim() || defaultPersonName(other),
+    }
+
+    let memberships = session.memberships
+    if (session.auth && session.room) {
+      memberships = upsertMembership(memberships, {
+        room: session.room,
+        person: session.me,
+        label: membershipLabel(names, session.room),
+        joinedAt:
+          memberships.find((item) => item.room === session.room)?.joinedAt ??
+          Date.now(),
+      })
+    }
+
+    this.uow.commit({ ...session, names, memberships }, { stickScroll: false })
+
+    if (session.auth && session.room && this.uow.services.accounts.available) {
+      void this.uow.services.accounts
+        .saveMemberships(session.auth.uid, memberships)
+        .catch(() => {})
+    }
+
     this.uow.toast('Nombres guardados')
   }
 }
@@ -264,6 +325,7 @@ export class CreateSharedRoomMutation {
       this.applySnapshot.markReady()
       await this.uow.services.sync.push(this.uow.session)
       await this.uow.services.sync.startListening()
+      await linkCurrentRoomIfNeeded(this.uow)
       this.uow.toast('Casa creada. Pasa el código a tu pareja')
     } catch (error) {
       const session = this.uow.session
@@ -315,6 +377,7 @@ export class JoinSharedRoomMutation {
         ...current,
         names: { ...current.names, b: nameB },
       })
+      await linkCurrentRoomIfNeeded(this.uow)
       this.uow.toast(successToast)
       return true
     } catch (error) {
@@ -348,10 +411,32 @@ export class CompleteOnboardingMutation {
 export class LeaveSharedRoomMutation {
   constructor(private readonly uow: SessionUnitOfWork) {}
 
-  execute(): void {
-    this.uow.services.sync.disconnect()
+  async execute(): Promise<void> {
     const session = this.uow.session
-    this.uow.commit({ ...session, room: null }, { push: false, stickScroll: false })
+    const leftRoom = session.room
+    this.uow.services.sync.disconnect()
+
+    const memberships =
+      session.auth && leftRoom
+        ? removeMembership(session.memberships, leftRoom)
+        : session.memberships
+
+    this.uow.commit(
+      { ...session, room: null, memberships },
+      { push: false, stickScroll: false },
+    )
+
+    if (session.auth && leftRoom && this.uow.services.accounts.available) {
+      try {
+        await this.uow.services.accounts.saveMemberships(
+          session.auth.uid,
+          memberships,
+        )
+      } catch {
+        // Local state already updated.
+      }
+    }
+
     this.uow.toast('Desconectado')
   }
 }
@@ -385,6 +470,19 @@ export class ApplyRemoteSnapshotMutation {
       snapshot.tasks.length > previousIds.size
 
     this.ready = true
+    let memberships = session.memberships
+    if (session.auth && session.room && snapshot.names) {
+      const names = { ...session.names, ...snapshot.names }
+      memberships = upsertMembership(memberships, {
+        room: session.room,
+        person: session.me,
+        label: membershipLabel(names, session.room),
+        joinedAt:
+          memberships.find((item) => item.room === session.room)?.joinedAt ??
+          Date.now(),
+      })
+    }
+
     this.uow.commit(
       {
         ...session,
@@ -392,6 +490,7 @@ export class ApplyRemoteSnapshotMutation {
         names: snapshot.names
           ? { ...session.names, ...snapshot.names }
           : session.names,
+        memberships,
       },
       { push: false, stickScroll: nearBottom },
     )
@@ -453,5 +552,194 @@ export class RequestNotificationsMutation {
     this.uow.toast(
       permission === 'granted' ? 'Avisos activados' : 'Avisos no permitidos',
     )
+  }
+}
+
+export class ApplyAuthUserMutation {
+  constructor(
+    private readonly uow: SessionUnitOfWork,
+    private readonly switchGroup?: SwitchGroupMutation,
+  ) {}
+
+  /**
+   * Merges remote memberships with the current local room, persists the union,
+   * and keeps the active room (or connects the most recent if none).
+   */
+  async execute(user: AuthUser | null, options: { toast?: boolean } = {}): Promise<void> {
+    if (!user) {
+      const session = this.uow.session
+      if (!session.auth && session.memberships.length === 0) return
+      this.uow.commit(
+        { ...session, auth: null, memberships: [] },
+        { push: false },
+      )
+      return
+    }
+
+    let remote: GroupMembership[] = []
+    if (this.uow.services.accounts.available) {
+      try {
+        remote = await this.uow.services.accounts.loadMemberships(user.uid)
+      } catch {
+        // Keep local memberships if remote load fails (offline).
+        remote = this.uow.session.memberships
+      }
+    }
+
+    const session = this.uow.session
+    const localExtra = localMembershipFromSession(session)
+    const localList = localExtra ? [localExtra] : []
+    const memberships = mergeMemberships(remote, localList)
+
+    this.uow.commit(
+      { ...session, auth: user, memberships },
+      { push: false },
+    )
+
+    if (this.uow.services.accounts.available) {
+      try {
+        await this.uow.services.accounts.saveMemberships(user.uid, memberships)
+      } catch {
+        // Offline: local cache still has the merge.
+      }
+    }
+
+    if (!this.uow.session.room && memberships[0] && this.switchGroup) {
+      await this.switchGroup.execute(memberships[0].room, { silent: true })
+    }
+
+    if (options.toast) {
+      const count = memberships.length
+      this.uow.toast(
+        count > 1
+          ? `Sesión iniciada · ${count} casas en tu cuenta`
+          : 'Sesión iniciada con Google',
+      )
+    }
+  }
+}
+
+export class SignInWithGoogleMutation {
+  constructor(
+    private readonly uow: SessionUnitOfWork,
+    private readonly applyAuth: ApplyAuthUserMutation,
+  ) {}
+
+  async execute(): Promise<void> {
+    if (!this.uow.services.auth.available) {
+      this.uow.toast('Firebase no está configurado')
+      return
+    }
+    try {
+      const user = await this.uow.services.auth.signInWithGoogle()
+      await this.applyAuth.execute(user, { toast: true })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : ''
+      if (message === 'redirect') {
+        this.uow.toast('Te redirigimos a Google…')
+        return
+      }
+      this.uow.toast(syncErrorMessage(error))
+    }
+  }
+}
+
+export class SignOutMutation {
+  constructor(
+    private readonly uow: SessionUnitOfWork,
+    private readonly applyAuth: ApplyAuthUserMutation,
+  ) {}
+
+  async execute(): Promise<void> {
+    try {
+      await this.uow.services.auth.signOut()
+      await this.applyAuth.execute(null)
+      this.uow.toast('Sesión cerrada')
+    } catch {
+      this.uow.toast('No se pudo cerrar sesión')
+    }
+  }
+}
+
+export class SwitchGroupMutation {
+  constructor(
+    private readonly uow: SessionUnitOfWork,
+    private readonly applySnapshot: ApplyRemoteSnapshotMutation,
+  ) {}
+
+  async execute(roomCode: string, options: { silent?: boolean } = {}): Promise<void> {
+    const code = normalizeRoomCode(roomCode)
+    const session = this.uow.session
+    const membership = session.memberships.find((item) => item.room === code)
+    if (!membership) {
+      this.uow.toast('Esa casa no está en tu cuenta')
+      return
+    }
+    if (session.room === code) {
+      if (!options.silent) this.uow.toast('Ya estás en esa casa')
+      return
+    }
+    if (!this.uow.services.sync.available) {
+      this.uow.toast('Firebase no está configurado')
+      return
+    }
+
+    try {
+      this.uow.services.sync.disconnect()
+      this.applySnapshot.markNotReady()
+      this.uow.commit(
+        {
+          ...session,
+          me: membership.person,
+          room: code,
+          tasks: [],
+          filter: 'all',
+        },
+        { push: false, stickScroll: true },
+      )
+      await this.uow.services.sync.connect(code, 'resume')
+      if (!options.silent) this.uow.toast(`Cambiado a ${membership.label}`)
+    } catch (error) {
+      this.uow.toast(syncErrorMessage(error))
+    }
+  }
+}
+
+export class BootAuthMutation {
+  constructor(
+    private readonly uow: SessionUnitOfWork,
+    private readonly applyAuth: ApplyAuthUserMutation,
+  ) {}
+
+  async execute(): Promise<void> {
+    if (!this.uow.services.auth.available) return
+
+    try {
+      const redirected = await this.uow.services.auth.completeRedirectSignIn()
+      if (redirected) {
+        await this.applyAuth.execute(redirected, { toast: true })
+        return
+      }
+    } catch {
+      // Ignore redirect errors; auth state listener still runs.
+    }
+
+    // Wait for the first auth state so memberships sync on cold start.
+    await new Promise<void>((resolve) => {
+      let settled = false
+      const finish = () => {
+        if (settled) return
+        settled = true
+        resolve()
+      }
+      const timeout = window.setTimeout(finish, 4000)
+      const unsub = this.uow.services.auth.onAuthStateChanged((user) => {
+        window.clearTimeout(timeout)
+        void this.applyAuth.execute(user).finally(() => {
+          unsub()
+          finish()
+        })
+      })
+    })
   }
 }

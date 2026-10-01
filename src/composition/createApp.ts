@@ -1,6 +1,8 @@
 import { LocalStorageSessionRepository } from '@/infrastructure/persistence/LocalStorageSessionRepository'
 import { readFirebaseConfig } from '@/infrastructure/config/firebaseConfig'
 import { createRoomSync } from '@/infrastructure/sync/RoomSync'
+import { createAuth } from '@/infrastructure/auth/FirebaseAuth'
+import { createUserAccount } from '@/infrastructure/account/FirebaseUserAccount'
 import { BrowserNotificationService } from '@/infrastructure/notifications/BrowserNotificationService'
 import {
   createZustandSessionStorePort,
@@ -32,11 +34,19 @@ import {
   BootSyncMutation,
   RequestNotificationsMutation,
   CompleteOnboardingMutation,
+  ApplyAuthUserMutation,
+  SignInWithGoogleMutation,
+  SignOutMutation,
+  SwitchGroupMutation,
+  BootAuthMutation,
 } from '@/application/mutations'
 
 export function createApp() {
+  const firebaseConfig = readFirebaseConfig()
   const repository = new LocalStorageSessionRepository()
-  const sync = createRoomSync(readFirebaseConfig())
+  const sync = createRoomSync(firebaseConfig)
+  const auth = createAuth(firebaseConfig)
+  const accounts = createUserAccount(firebaseConfig)
   const notifications = new BrowserNotificationService()
   const storePort = createZustandSessionStorePort()
 
@@ -49,11 +59,15 @@ export function createApp() {
     sync,
     notifications,
     store: storePort,
+    auth,
+    accounts,
   })
 
   const applyRemoteSnapshot = new ApplyRemoteSnapshotMutation(uow)
   const joinSharedRoom = new JoinSharedRoomMutation(uow, applyRemoteSnapshot)
   const createSharedRoom = new CreateSharedRoomMutation(uow, applyRemoteSnapshot)
+  const switchGroup = new SwitchGroupMutation(uow, applyRemoteSnapshot)
+  const applyAuthUser = new ApplyAuthUserMutation(uow, switchGroup)
 
   sync.subscribe(
     (snapshot) => applyRemoteSnapshot.execute(snapshot),
@@ -90,10 +104,17 @@ export function createApp() {
       requestNotifications: new RequestNotificationsMutation(uow),
       completeOnboarding: new CompleteOnboardingMutation(uow),
       applyRemoteSnapshot,
+      applyAuthUser,
+      signInWithGoogle: new SignInWithGoogleMutation(uow, applyAuthUser),
+      signOut: new SignOutMutation(uow, applyAuthUser),
+      switchGroup,
+      bootAuth: new BootAuthMutation(uow, applyAuthUser),
     },
   }
 
   const boot = async (): Promise<string | null> => {
+    await useCases.mutations.bootAuth.execute()
+
     const pendingJoinCode = await useCases.mutations.bootSync.execute({
       confirmJoinDeepLink: () =>
         window.confirm(
@@ -112,7 +133,7 @@ export function createApp() {
     return pendingJoinCode
   }
 
-  return { useCases, boot, sync, notifications }
+  return { useCases, boot, sync, notifications, auth }
 }
 
 export type AppContainer = ReturnType<typeof createApp>

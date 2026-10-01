@@ -31,7 +31,8 @@ Deploy the `dist/` folder to any static host with HTTPS (Netlify, GitHub Pages, 
 Without Firebase the app stays local-only. To sync between two phones:
 
 1. Create a Firebase project and a **Realtime Database** (locked mode is fine).
-2. Publish these rules:
+2. Enable **Authentication → Sign-in method → Google**.
+3. Publish these rules:
 
 ```json
 {
@@ -42,15 +43,21 @@ Without Firebase the app stays local-only. To sync between two phones:
         ".write": true,
         ".validate": "$room.matches(/^[a-z0-9]{8,32}$/)"
       }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.uid == $uid"
+      }
     }
   }
 }
 ```
 
-Rooms cannot be listed; only someone who knows the code can open one.
+Rooms cannot be listed; only someone who knows the code can open one. User memberships live under `users/{uid}/memberships` and require Google sign-in.
 
-3. Register a Web app and copy the config values.
-4. Copy `.env.example` to `.env` and fill in:
+4. Register a Web app and copy the config values. Add your domain (and `localhost`) to **Authentication → Settings → Authorized domains**.
+5. Copy `.env.example` to `.env` and fill in:
 
 ```env
 VITE_FIREBASE_API_KEY=...
@@ -60,7 +67,7 @@ VITE_FIREBASE_PROJECT_ID=...
 VITE_FIREBASE_APP_ID=...
 ```
 
-5. Rebuild / restart the dev server.
+6. Rebuild / restart the dev server.
 
 ### Pairing
 
@@ -69,6 +76,10 @@ VITE_FIREBASE_APP_ID=...
 3. Set names in Settings. Changes sync in real time.
 
 Deep link: `?casa=<roomCode>` joins after confirmation (local tasks are replaced).
+
+### Google login (optional)
+
+Settings → **Continuar con Google**. Signing in links the current house to your account and merges any houses already on that account. With more than one house, use the header / Settings switcher to change houses. Signing out does not delete local tasks; disconnect removes the current house from the account.
 
 ## Notifications
 
